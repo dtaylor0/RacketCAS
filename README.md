@@ -1,7 +1,12 @@
 # Symbolic Differentiation
 
-![Imgur](https://i.imgur.com/XL6xiEL.png)
+Computer algebra system in Racket that can be run in the REPL.  Takes equations in list form and returns derivative, more functionality will be introduced over time.
 
-![Imgur](https://i.imgur.com/tybYyIu.png)
+### Example use:
 
-![Imgur](https://i.imgur.com/347nes0.png)
+```
+> (deriv '(* 3 (cos (^ x -6))))
+'(* 3 (* (* -6 1 (^ x -7)) (* -1 (sin (^ x -6)))))
+```
+
+Simplification not complete yet.
