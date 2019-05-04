@@ -1,39 +1,27 @@
-;takes listOfTerms for input equation (in list form) and returns a list with the correct changes to the numbers in that list
-(define derivative
+
+(define deriv
   (lambda (equation)
-    (eqToString (map (lambda (term)
-           (list (* (car term) (cadr term)) (- (cadr term) 1))) (listOfTerms equation)))))
-
-;takes input equation in string form and translates it into a list in this format:
-;
-;"34x^65+2x^5+10x^2" => '((34 65) (2 5) (10 2))
-(define listOfTerms
-  (lambda (equation)
-    (map (lambda (i)
-           (map string->number i)) (map (lambda (x)
-                                          (string-split x "x^")) (string-split equation "+")))))
-;removes spaces, other stuff from the inputted equation string
-(define formatEq
-  (lambda (equation)
-    (string-replace (string-replace (string-replace equation " " "") "-" "+-") "^+-" "^-")))
-
-;in the result string, this removes instances of "+-" as well as a "+" at the end of the string
-(define formatAns
-  (lambda (ans)
-    (let ([revisedAns (string-replace ans "+-" "-")])
-    (substring revisedAns 0 (- (string-length revisedAns) 1)))))
-
-;takes output equation in list form and turns it into a string
-;
-;'((10 4) (3 8)) => "10x^4+3x^8"
-(define eqToString
-  (lambda (eqList)
-    (let ([eqStrList (map (lambda (i) (map number->string i)) eqList)])
-      (string-join (map termToString eqStrList) ""))))
-
-;helper function for eqToString, makes a string out of an individual term
-;
-;'(10 4) => "10x^4+"
-(define termToString
-  (lambda (term)
-    (if (null? term) "" (string-append (car term) "x^" (second term) "+"))))
+    (cond
+     [(number? equation) 0]
+     [(eq? equation 'x) 1]
+     [(not (list? equation)) (display "error: bad input\n")]
+     [(null? equation) 0]
+     [(eq? (car equation) '+) (cond
+                               [(eq? 0 (length (cddr equation))) (deriv (cadr equation))]
+                               [else (list '+ (deriv (cadr equation)) (deriv (cons '+ (cddr equation))))])]
+     [(eq? (car equation) '*) (cond
+                               [(eq? 0 (length (cddr equation))) (deriv (cadr equation))]
+                               [else (if (number? (cadr equation))
+                                         (list '* (cadr equation) (deriv (cons '* (cddr equation))))
+                                         (list '* (deriv (cadr equation)) (deriv (cons '* (cddr equation)))))])]
+     [(eq? (car equation) 'sin) (list '* (deriv (cadr equation)) (list 'cos (cadr equation)))]
+     [(eq? (car equation) 'cos) (list '* (deriv (cadr equation)) (list '* -1 (list 'sin (cadr equation))))]
+     [(eq? (car equation) 'tan) (list '* (deriv (cadr equation)) (list '^ (list 'sec (cadr equation)) 2))]
+     [(eq? (car equation) '^) (list '*
+                                    (caddr equation)
+                                    (deriv (cadr equation))
+                                    (list '^ (cadr equation) (- (caddr equation) 1)))]
+     [(eq? (car equation) 'x) 1]
+     [(number? (car equation)) 0]
+     [else (display "error\n")]
+     )))
