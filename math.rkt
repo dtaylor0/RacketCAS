@@ -7,10 +7,10 @@
      [(not (list? equation)) (display "error: bad input\n")]
      [(null? equation) 0]
      [(eq? (car equation) '+) (cond
-                               [(eq? 0 (length (cddr equation))) (deriv (cadr equation))]
+                               [(null? (cddr equation)) (deriv (cadr equation))]
                                [else (list '+ (deriv (cadr equation)) (deriv (cons '+ (cddr equation))))])]
      [(eq? (car equation) '*) (cond
-                               [(eq? 0 (length (cddr equation))) (deriv (cadr equation))]
+                               [(null? (cddr equation)) (deriv (cadr equation))]
                                [else (if (number? (cadr equation))
                                          (list '* (cadr equation) (deriv (cons '* (cddr equation))))
                                          (list '* (deriv (cadr equation)) (deriv (cons '* (cddr equation)))))])]
@@ -25,3 +25,7 @@
      [(number? (car equation)) 0]
      [else (display "error\n")]
      )))
+
+(define deriv-at-point
+  (lambda (equation point)
+    ))
