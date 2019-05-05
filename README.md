@@ -1,6 +1,8 @@
 # Symbolic Differentiation
 
-Computer algebra system in Racket that can be run in the REPL.  Input equations in list form:
+Computer algebra system in Racket that can be run in the REPL.  When using this CAS, equations should be entered in list form.
+
+For example:
 
 ```
 '(+ (^ x 9) (cos (* 2 x)) 5)
@@ -12,7 +14,7 @@ x^9 + cos(2x) + 5
 
 ### Currently supported features:
 
-##### deriv
+#### deriv
 
 Takes a function f(x), returns the derivative.
 
@@ -23,7 +25,7 @@ Takes a function f(x), returns the derivative.
 
 Note: Simplification of the output is not implemented yet.
 
-##### deriv-at-point
+#### deriv-at-point
 
 Takes a function f(x) and a value of x, returns the value of the derivative of f(x) at x = input value
 
@@ -32,7 +34,7 @@ Takes a function f(x) and a value of x, returns the value of the derivative of f
 2304.3494781634527
 ```
 
-##### evaluate
+#### evaluate
 
 Takes a function f(x) and a value of x, returns the value of f(x) at x = input value
 
