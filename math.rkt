@@ -28,14 +28,46 @@
            (display "\" is not supported as an operator\n")]
      )))
 
+#|(define simplify
+  (lambda (equation)
+    (cond
+     [(number? equation) equation]
+     [(eq? equation 'x) equation]
+     [(not (list? equation)) (display "error: bad input\n")]
+     [(null? equation) equation]
+     [(eq? (car equation) '+) ])))|#
+
 (define deriv-at-point
   (lambda (equation point)
     (evaluate (deriv equation) point)))
 
+(define nth-deriv
+  (lambda (equation n)
+    (cond
+     [(< n 0) (display "error: cannot take negative derivative\n")]
+     [(eq? n 0) equation]
+     [else (nth-deriv (deriv equation) (- n 1))])))
+
+(define nth-deriv-at-point
+  (lambda (equation n point)
+    (evaluate (nth-deriv equation n) point)))
+
+(define increasing-at-point?
+  (lambda (equation point)
+    (> (deriv-at-point equation point) 0)))
+
+(define decreasing-at-point?
+  (lambda (equation point)
+    (< (deriv-at-point equation point) 0)))
+
 (define evaluate
   (lambda (equation value)
-    (let ([eq (replace-x equation value)])
-      (evaluate-rec eq value))))
+    (cond
+    [(number? equation) equation]
+    [(eq? equation 'x) value]
+    [(not (list? equation)) (display "error: bad input\n")]
+    [else (let ([eq (replace-x equation value)])
+      (evaluate-rec eq value))])))
 
 (define evaluate-rec
   (lambda (equation value)
@@ -65,3 +97,8 @@
                       [(eq? i 'x) value]
                       [(list? i) (replace-x i value)]
                       [else i])) equation)))
+
+#|(define contains-x?
+  (lambda (equation)
+    (map (lambda (i) (cond
+                      [(eq? i )])) equation)))|#
