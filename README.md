@@ -34,6 +34,43 @@ Takes a function f(x) and a value of x, returns the value of the derivative of f
 2304.3494781634527
 ```
 
+#### nth-deriv
+
+Takes a function f(x) and a number n, returns the nth derivative of f(x)
+
+```
+> (nth-deriv '(^ x 5) 3)
+'(* 5 (* 1 (* 4 (* 1 (* 3 1 (^ x 2))))))
+```
+
+#### nth-deriv-at-point
+
+Takes a function f(x), a number n, and a value of x, and returns the value at x of the nth derivative of f(x)
+
+```
+> (nth-deriv-at-point '(^ x 9) 4 2)
+96768
+```
+
+#### increasing-at-point?
+
+Takes a function f(x) and a value of x, returns true if the derivative of f(x) is positive at the value of x, false otherwise
+
+```
+> (increasing-at-point? '(^ x 2) -9)
+#f
+```
+
+
+#### decreasing-at-point?
+
+Takes a function f(x) and a value of x, returns true if the derivative of f(x) is negative at the value of x, false otherwise
+
+```
+> (decreasing-at-point? '(^ x 2) -9)
+#t
+```
+
 #### evaluate
 
 Takes a function f(x) and a value of x, returns the value of f(x) at x = input value
