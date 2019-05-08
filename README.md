@@ -79,3 +79,30 @@ Takes a function f(x) and a value of x, returns the value of f(x) at x = input v
 > (evaluate '(* 3 (^ x 2)) 5)
 75
 ```
+
+#### integral
+
+Takes a function f(x), returns the integral of f(x) + C
+
+```
+> (integral '(+ x 5))
+'(+ (+ (* 0.5 (^ x 2)) (* 5 x)) C)
+```
+
+#### integral-rec
+
+Takes a function f(x), returns the integral of f(x) without the + C.  Useful if the equation will be needed for any other subsequent operation.
+
+```
+> (integral-rec '(+ x 5))
+'(+ (* 0.5 (^ x 2)) (* 5 x))
+```
+
+#### def-integral
+
+Takes a function f(x), a value i, and a value j, and returns the definite integral of f(x) from i to j.
+
+```
+> (def-integral '(+ x 3) 0 2)
+8.0
+```
