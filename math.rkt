@@ -7,7 +7,7 @@
                           (if (not (null? (cdr equation))) (cddr equation)
                             -1)
                           -1)])
-    ;'(op second a b c d) - '(a b c d) is third-to-end
+      ;'(op second a b c d) - '(a b c d) is third-to-end
       (cond
         [(number? equation) 0]
         [(eq? equation 'x) 1]
@@ -47,6 +47,15 @@
               (display op)
               (display "\" is not supported\n")]
         ))))
+
+#|(define simplify
+    (lambda (equation)
+      (cond
+        [(number? equation) equation]
+        [(eq? equation 'x) equation]
+        [(not (list? equation)) (display "error: bad input\n")]
+        [(null? equation) equation]
+        [(eq? (car equation) '+) ])))|#
 
 #|(define simplify
     (lambda (equation)
@@ -119,10 +128,19 @@
                        [(list? i) (replace-x i value)]
                        [else i])) equation)))
 
-#|(define contains-x?
-    (lambda (equation)
-      (map (lambda (i) (cond
-                         [(eq? i )])) equation)))|#
+(define contains-x?
+  (lambda (equation)
+    (cond
+      [(not (list? equation)) (if (eq? equation 'x) #t #f)]
+      [(null? equation) #f]
+      [else (or (contains-x? (car equation)) (contains-x? (cdr equation)))])))
+
+(define contains?
+  (lambda (equation target)
+    (cond
+      [(not (list? equation)) (if (eq? equation target) #t #f)]
+      [(null? equation) #f]
+      [else (or (contains? (car equation) target) (contains? (cdr equation) target))])))
 
 (define integral
   (lambda (equation)
