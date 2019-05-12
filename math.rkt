@@ -1,7 +1,7 @@
 
 (define deriv
   (lambda (equation)
-    (simplify (deriv-rec equation))))
+    (simplify (simplify (deriv-rec equation)))))
 
 (define deriv-rec
   (lambda (equation)
@@ -212,7 +212,7 @@
 
 (define integral
   (lambda (equation)
-    (simplify (integral-rec equation))))
+    (simplify (simplify (integral-rec equation)))))
 
 (define integral-rec
   (lambda (equation)
@@ -261,10 +261,11 @@
                                                                   [(contains-trig? (cadr equation)) (error "error: integral-rec - trig functions are not supported")]
                                                                   [(contains? (cadr equation) '/) (error "error: integral-rec - \"/\" is not supported in exponents")]
                                                                   [(and (not (list? (cadr equation)))
-                                                                        (or (not (eq? (cadr equation) 'x))
-                                                                            (not (number? cadr equation)))) (error "error: integral-rec - unrecognized base of exponent")]
+                                                                        (and (not (eq? (cadr equation) 'x))
+                                                                            (not (number? (cadr equation))))) (error "error: integral-rec - unrecognized base of exponent")]
                                                                   [(or (eq? (cadr equation) 'x)
-                                                                       (and (eq? (caadr equation) '*)
+                                                                       (and (list? (cadr equation))
+                                                                            (eq? (caadr equation) '*)
                                                                             (number? (cadadr equation))
                                                                             (eq? (car (cddadr equation)) 'x))
                                                                                                           ) (list '*

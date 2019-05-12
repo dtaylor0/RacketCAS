@@ -12,7 +12,7 @@ is the list form of:
 x^9 + cos(2x) + 5
 ```
 
-### Important Info
+### Important Info:
 
 #### how to use each operation when writing an equation
 
@@ -30,28 +30,62 @@ x^9 + cos(2x) + 5
 
 The other 5 trig functions are supported as well.
 
-Integration only supports + and * (except for * requiring integration by parts).
+Integration only supports +, -, ^ with no x in the exponent and only x or (\* constant x) in the base, some trig functions, 
 
 ### Currently supported features:
 
+
+#### print-equation
+
+Takes a function f(x), prints it using equation-\>string
+
+#### equation->string
+
+Takes a function f(x), turns it into a string in a readable form
+
+```
+> (equation->string '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x))))
+"2*x^4 + (3*cos(x))/(5*x)"
+```
 #### deriv
 
-Takes a function f(x), returns the derivative.
+Takes a function f(x), returns the derivative simplified
+
+Supports the power rule and quotient rule
 
 ```
-> (deriv '(* 3 (cos (^ x -6))))
-'(* 3 (* (* -6 1 (^ x -7)) (* -1 (sin (^ x -6)))))
+> (deriv '(- (^ (sin x) 5) (* 5 (^ x 3)) (* 3 x) 2))
+'(+ (* 5 (^ (sin x) 4) (cos x)) (* -15 (^ x 2)) -3)
 ```
 
-Note: Simplification of the output is not implemented yet.
+#### deriv-rec
+
+Takes a function f(x), returns the derivative unsimplified
+
+#### simplify
+
+Takes a function f(x), greatly simplifies it by removing nested + and * calls as well as combining all numbers in + and * calls
+
+```
+> (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x))))
+'(+
+  (* 2 (* 4 1 (^ x 3)))
+  (/
+   (+ (* (* 3 (* 1 (* -1 (sin x)))) (* 5 x)) (* -1 (* 3 (cos x)) (* 5 1)))
+   (^ (* 5 x) 2)))
+
+> (simplify (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x)))))
+'(+ (* 8 (^ x 3)) (/ (+ (* -15 x (sin x)) (* -15 (cos x))) (^ (* 5 x) 2)))
+
+```
 
 #### deriv-at-point
 
 Takes a function f(x) and a value of x, returns the value of the derivative of f(x) at x = input value
 
 ```
-> (deriv-at-point '(+ (* 3 (^ x -5)) (sin x) (^ x 9) x 3) 2)
-2304.3494781634527
+> (deriv-at-point '(- (^ (sin x) 5) (* 5 (^ x 3)) (* 3 x) 2) 5)
+-376.800752837073
 ```
 
 #### nth-deriv
@@ -59,8 +93,8 @@ Takes a function f(x) and a value of x, returns the value of the derivative of f
 Takes a function f(x) and a number n, returns the nth derivative of f(x)
 
 ```
-> (nth-deriv '(^ x 5) 3)
-'(* 5 (* 1 (* 4 (* 1 (* 3 1 (^ x 2))))))
+> (nth-deriv '(+ (* 4 (^ x 10)) (* 3 (cos (* 2 x)))) 3)
+'(+ (* 2880 (^ x 7)) (* 24 (sin (* 2 x))))
 ```
 
 #### nth-deriv-at-point
@@ -68,8 +102,8 @@ Takes a function f(x) and a number n, returns the nth derivative of f(x)
 Takes a function f(x), a number n, and a value of x, and returns the value at x of the nth derivative of f(x)
 
 ```
-> (nth-deriv-at-point '(^ x 9) 4 2)
-96768
+> (nth-deriv-at-point '(+ (* 4 (^ x 10)) (* 3 (cos (* 2 x)))) 3 2)
+368621.83674011263
 ```
 
 #### increasing-at-point?
@@ -96,8 +130,8 @@ Takes a function f(x) and a value of x, returns true if the derivative of f(x) i
 Takes a function f(x) and a value of x, returns the value of f(x) at x = input value
 
 ```
-> (evaluate '(* 3 (^ x 2)) 5)
-75
+> (evaluate '(+ (* 5 (^ (sin x) 4) (cos x)) (* -15 (^ x 2)) -3) 4)
+-244.07211470503478
 ```
 
 #### evaluate-rec
@@ -105,8 +139,8 @@ Takes a function f(x) and a value of x, returns the value of f(x) at x = input v
 Takes an equation with no x, returns the value
 
 ```
-> (evaluate '(* 3 (^ 5 2)) 5)
-75
+> (evaluate-rec '(+ (* 5 (^ (sin 4) 4) (cos 4)) (* -15 (^ 4 2)) -3))
+-244.07211470503478
 ```
 
 #### replace-x
@@ -125,6 +159,8 @@ Takes a function f(x), returns true if there is an x in the function and false o
 ```
 > (contains-x? '(+ (* 2 (^ x 4)) (/ (* 4 x) (sin x))))
 #t
+> (contains-x? '(+ (* 5 (^ (sin 4) 4) (cos 4)) (* -15 (^ 4 2)) -3))
+#f
 ```
 
 #### contains?
@@ -136,51 +172,42 @@ Takes a function f(x) and a number or operator, returns true if the number/opera
 #t
 ```
 
-#### print-equation
+#### contains-trig?
 
-Takes a function f(x), prints it using equation-\>string
-
-#### equation->string
-
-Takes a function f(x), turns it into a string in a readable form
+Takes a function f(x), returns true if f(x) contains a trig function and false otherwise
 
 ```
-> (equation->string '(+ (* 2 (^ x (* 5 x))) (/ x (sin x))))
-"2*x^(5*x) + x/(sin(x))"
+> (contains-trig? '(+ (* 5 (^ (sin x) 4) (cos x)) (* -15 (^ x 2)) -3))
+#t
 ```
 
-#### simplify
+#### append-lists-in-list
 
-Takes a function f(x), greatly simplifies it by removing nested + and * calls as well as combining all numbers in + and * calls
+Takes a list of lists lst, returns each sublist appended into one big list
 
 ```
-> (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x))))
-'(+
-  (* 2 (* 4 1 (^ x 3)))
-  (/
-   (+ (* (* 3 (* 1 (* -1 (sin x)))) (* 5 x)) (* -1 (* 3 (cos x)) (* 5 1)))
-   (^ (* 5 x) 2)))
-> (simplify (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x)))))
-'(+ (* 8 (^ x 3)) (/ (+ (* -15 x (sin x)) (* -15 (cos x))) (^ (* 5 x) 2)))
-
+> (append-lists-in-list '((a b c) (d e) () (f g h i j) (k l m n) (o p)))
+'(a b c d e f g h i j k l m n o p)
 ```
 
 #### integral
 
-Takes a function f(x), returns the integral of f(x) + C
+Takes a function f(x), returns the integral of f(x) simplified
+
+Supports +, -, * (except for f(x)\*g(x) which requires integration by parts), ^ (with no x in the exponent and either x or '(\* constant x) as the base), sin(x), cos(x), and sec^2(x)
 
 ```
-> (integral '(+ x 5))
-'(+ (+ (* 0.5 (^ x 2)) (* 5 x)) C)
+> (integral '(+ (* 5 (^ (* 2 x) 3)) (* 3 x) 2))
+'(+ (* 10 (^ x 4)) (* 3/2 (^ x 2)) (* 2 x))
 ```
 
 #### integral-rec
 
-Takes a function f(x), returns the integral of f(x) without the + C.  Useful if the equation will be needed for any other subsequent operation.
+Takes a function f(x), returns the integral of f(x) unsimplified
 
 ```
-> (integral-rec '(+ x 5))
-'(+ (* 0.5 (^ x 2)) (* 5 x))
+> (integral-rec '(+ (* 5 (^ (* 2 x) 3)) (* 3 x) 2))
+'(+ (* 5 (* 2 (^ x 4))) (+ (* 3 (* 1/2 (^ x 2))) (* 2 x)))
 ```
 
 #### def-integral
@@ -188,6 +215,6 @@ Takes a function f(x), returns the integral of f(x) without the + C.  Useful if 
 Takes a function f(x), a value i, and a value j, and returns the definite integral of f(x) from i to j.
 
 ```
-> (def-integral '(+ x 3) 0 2)
-8.0
+> (def-integral '(+ (* 5 (^ (* 2 x) 3)) (* 3 x) 2) 0 5)
+12595/2
 ```
