@@ -44,10 +44,17 @@
         [(eq? op 'csc) (list '* (deriv-rec second) (list '* -1 (list 'csc second) (list 'cot second)))]
         [(eq? op 'sec) (list '* (deriv-rec second) (list '* (list 'sec second) (list 'tan second)))]
         [(eq? op 'cot) (list '* (deriv-rec second) (list '* -1 (list '^ (list 'csc second) 2)))]
-        [(eq? op '^) (list '*
-                           (caddr equation)
-                           (deriv-rec second)
-                           (list '^ second (- (caddr equation) 1)))]
+        [(eq? op '^) (cond
+                       [(not (contains-x? equation)) 0]
+                       [(not (contains-x? (caddr equation))) (list '*
+                             (caddr equation)
+                             (deriv-rec second)
+                             (list '^ second (- (caddr equation) 1)))]
+                       [(not (contains-x? second)) (list '*
+                                                         (log (evaluate-rec second))
+                                                         (list '^ (evaluate-rec second) (caddr equation))
+                                                         (deriv-rec (caddr equation)))]
+                       [else (error "error: deriv-rec - equations of the form f(x)^g(x) not supported")])]
         [(eq? op 'x) 1]
         [(number? op) 0]
         [else  (error (string-append "error: deriv - \"" (symbol->string op) "\" is not supported"))]
@@ -102,6 +109,15 @@
                                            [(> (length new-list) 1) (cons '* (map simplify (append (if (eq? number 1) '() (list number))
                                                                                                    (cdr new-list))))]
                                            [else number]))])]
+      [(eq? (car equation) '^) (cond
+                               [(not (contains-x? equation)) (evaluate-rec equation)]
+                               [(not (contains-x? (cadr equation))) (if (eq? 1 (evaluate-rec (cadr equation)))
+                                                                        1
+                                                                        (list '^ (simplify (cadr equation)) (simplify (caddr equation))))]
+                               [(not (contains-x? (caddr equation))) (if (eq? 1 (evaluate-rec (caddr equation)))
+                                                                         (simplify (cadr equation))
+                                                                         (list '^ (simplify (cadr equation)) (simplify (caddr equation))))]
+                               [else (list '^ (simplify (cadr equation)) (simplify (caddr equation)))])]
       [else (cons (car equation) (map simplify (cdr equation)))])))
 
 (define append-lists-in-list
@@ -206,15 +222,21 @@
       [(eq? equation 'x) (list '* 1/2 (list '^ 'x 2))]
       [(not (list? equation)) (error "error: integral-rec - bad input")]
       [(null? equation) (error "error: integral-rec - bad input")]
-      [(eq? (car equation) 0) 0]
-      [(number? (car equation)) (list '* (car equation) 'x)]
-      [(eq? (car equation) 'x) (list '* 1/2 (list '^ 'x 2))]
+      [(eq? 1 (length equation)) (cond
+                                   [(eq? (car equation) 0) 0]
+                                   [(number? (car equation)) (list '* (car equation) 'x)]
+                                   [(eq? (car equation) 'x) (list '* 1/2 (list '^ 'x 2))]
+                                   [else (error "error: integral-rec - bad input")])]
       [(eq? (car equation) '+) (cond
                                  [(not (contains-x? equation)) (integral-rec (evaluate-rec equation))]
                                  [(null? (cddr equation)) (integral-rec (cadr equation))]
                                  [else (list '+
                                              (integral-rec (cadr equation))
                                              (integral-rec (cons '+ (cddr equation))))])]
+        [(eq? (car equation) '-) (cond
+                       [(null? (cddr equation)) (list '* -1 (integral-rec (cadr equation)))]
+                       [else (integral-rec (cons '+ (cons (cadr equation) (map (lambda (i)
+                                                                     (list '* -1 i)) (cddr equation)))))])]
       [(eq? (car equation) '*) (cond
                                  [(not (contains-x? equation)) (integral-rec (evaluate-rec equation))]
                                  [(null? (cddr equation)) (integral-rec (cadr equation))]
@@ -229,18 +251,40 @@
                                                                                       (integral-rec (cadr equation)))]
                                  [else (error "error: integral-rec - bad input")])]
       [(eq? (car equation) '^) (cond
+                                 [(not (contains-x? equation)) (integral-rec (evaluate-rec equation))]
+                                 [(and (and (list? (cadr equation))
+                                            (eq? (caadr equation) 'sec)
+                                            (eq? (cadadr equation) 'x))
+                                       (eq? (caddr equation) 2)) (list 'tan 'x)]
                                  [(contains-x? (caddr equation)) (error "error: integral-rec - exponents containing x are not supported")]
                                  [(contains-x? (cadr equation)) (cond
-                                                                  [(contains-trig? (cadr equation)) (error "error: integral-rec - only x^n or (a*x)^n is supported")]
-                                                                  [else (list '*
-                                                                              (/ (evaluate equation 1)
-                                                                                 (+ 1
-                                                                                    (evaluate-rec (caddr equation))))
-                                                                              (list '^
-                                                                                    'x
-                                                                                    (+ 1
-                                                                                       (evaluate-rec (caddr equation)))))])]
+                                                                  [(contains-trig? (cadr equation)) (error "error: integral-rec - trig functions are not supported")]
+                                                                  [(contains? (cadr equation) '/) (error "error: integral-rec - \"/\" is not supported in exponents")]
+                                                                  [(and (not (list? (cadr equation)))
+                                                                        (or (not (eq? (cadr equation) 'x))
+                                                                            (not (number? cadr equation)))) (error "error: integral-rec - unrecognized base of exponent")]
+                                                                  [(or (eq? (cadr equation) 'x)
+                                                                       (and (eq? (caadr equation) '*)
+                                                                            (number? (cadadr equation))
+                                                                            (eq? (car (cddadr equation)) 'x))
+                                                                                                          ) (list '*
+                                                                                                                  (/ (evaluate equation 1)
+                                                                                                                     (+ 1
+                                                                                                                        (evaluate-rec (caddr equation))))
+                                                                                                                  (list '^
+                                                                                                                        'x
+                                                                                                                        (+ 1
+                                                                                                                           (evaluate-rec (caddr equation)))))]
+                                                                  [else (error "error: integral-rec - unsupported base for exponent")])]
                                  [else (integral-rec (evaluate-rec equation))])]
+      [(eq? (car equation) 'sin) (cond
+                                   [(not (contains-x? equation)) (evaluate-rec equation)]
+                                   [(eq? (cadr equation) 'x) (list '* -1 (list 'cos 'x))]
+                                   [else (error "error: integral-rec - integration by parts not supported")])]
+      [(eq? (car equation) 'cos) (cond
+                                   [(not (contains-x? equation)) (evaluate-rec equation)]
+                                   [(eq? (cadr equation) 'x) (list 'sin 'x)]
+                                   [else (error "error: integral-rec - integration by parts not supported")])]
       [else (error (string-append "error: integral-rec - \""
                                   (symbol->string (car equation))
                                   "\" is not supported"))]
