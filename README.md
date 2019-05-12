@@ -145,8 +145,24 @@ Takes a function f(x), prints it using equation-\>string
 Takes a function f(x), turns it into a string in a readable form
 
 ```
-> (equation->string '(+ (* 2 (^ x 4)) (/ (* 4 x) (sin x))))
-"(2)*((x)^(4)) + ((4)*(x))/(sin(x))"
+> (equation->string '(+ (* 2 (^ x (* 5 x))) (/ x (sin x))))
+"2*x^(5*x) + x/(sin(x))"
+```
+
+#### simplify
+
+Takes a function f(x), greatly simplifies it by removing nested + and * calls as well as combining all numbers in + and * calls
+
+```
+> (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x))))
+'(+
+  (* 2 (* 4 1 (^ x 3)))
+  (/
+   (+ (* (* 3 (* 1 (* -1 (sin x)))) (* 5 x)) (* -1 (* 3 (cos x)) (* 5 1)))
+   (^ (* 5 x) 2)))
+> (simplify (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x)))))
+'(+ (* 8 (^ x 3)) (/ (+ (* -15 x (sin x)) (* -15 (cos x))) (^ (* 5 x) 2)))
+
 ```
 
 #### integral
