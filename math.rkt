@@ -50,9 +50,7 @@
                            (list '^ second (- (caddr equation) 1)))]
         [(eq? op 'x) 1]
         [(number? op) 0]
-        [else (display "error: \"")
-              (display op)
-              (display "\" is not supported\n")]
+        [else  (error (string-append "error: deriv - \"" (symbol->string op) "\" is not supported"))]
         ))))
 
 (define simplify
@@ -60,7 +58,6 @@
     (cond
       [(number? equation) equation]
       [(eq? equation 'x) equation]
-      ;[(not (list? equation)) (display "error: bad input\n")]
       [(null? equation) equation]
       [(eq? (car equation) '+) (cond
                                  [(null? (cddr equation)) (simplify (cadr equation))]
@@ -81,9 +78,10 @@
                                                                                                (if (eq? number 0)
                                                                                                  '()
                                                                                                  (list number))))]
-                                           [else (cons '+ (map simplify (append (cdr new-list) (if (eq? number 0)
+                                           [(> (length new-list) 1) (cons '+ (map simplify (append (cdr new-list) (if (eq? number 0)
                                                                                                  '()
-                                                                                                 (list number)))))]))])]
+                                                                                                 (list number)))))]
+                                           [else number]))])]
       [(eq? (car equation) '*) (cond
                                  [(null? (cddr equation)) (simplify (cadr equation))]
                                  [else (let ([nested-times-lists (filter (lambda (i)
@@ -101,13 +99,15 @@
                                                                                                 (filter (lambda (i) (not (eq? i '*)))
                                                                                                         (append-lists-in-list nested-times-lists))
                                                                                                 (if (eq? number 1) '() (list number))))]
-                                           [else (cons '* (map simplify (append (if (eq? number 1) '() (list number)) (cdr new-list))))]))])]
+                                           [(> (length new-list) 1) (cons '* (map simplify (append (if (eq? number 1) '() (list number))
+                                                                                                   (cdr new-list))))]
+                                           [else number]))])]
       [else (cons (car equation) (map simplify (cdr equation)))])))
 
 (define append-lists-in-list
   (lambda (lst)
     (cond
-      [(not (list? lst)) (display "error\n")]
+      [(not (list? lst)) (error "error: append-lists-in-list - did not recieve a list")]
       [(null? (cdr lst)) (car lst)]
       [else (append (car lst) (append-lists-in-list (cdr lst)))])))
 
@@ -118,7 +118,7 @@
 (define nth-deriv
   (lambda (equation n)
     (cond
-      [(< n 0) (display "error: cannot take negative derivative\n")]
+      [(< n 0) (error "error: nth-deriv - cannot take negative derivative")]
       [(eq? n 0) equation]
       [else (nth-deriv (deriv equation) (- n 1))])))
 
@@ -139,7 +139,7 @@
     (cond
       [(number? equation) equation]
       [(eq? equation 'x) value]
-      [(not (list? equation)) (display "error: bad input\n")]
+      [(not (list? equation)) (error "error: evaluate - bad input")]
       [else (let ([eq (replace-x equation value)])
               (evaluate-rec eq))])))
 
@@ -147,7 +147,7 @@
   (lambda (equation)
     (cond
       [(number? equation) equation]
-      [(not (list? equation)) (display "error\n")]
+      [(not (list? equation)) (error "error: evaluate-rec - bad input")]
       [(null? equation) 0]
       [(eq? (car equation) '+) (cond
                                  [(null? (cddr equation)) (evaluate-rec (cadr equation))]
@@ -158,9 +158,6 @@
                                  [else (* (evaluate-rec (cadr equation))
                                           (evaluate-rec (cons '* (cddr equation))))])]
       [(eq? (car equation) '/) (cond
-                                 ;[(not (eq? (length equation) 3)) (display "error: \"")
-                                 ;                                 (display (car equation))
-                                 ;                                 (display "\" should have exactly two arguments\n")]
                                  [(null? (cddr equation)) (evaluate-rec (cadr equation))]
                                  [else (/ (evaluate-rec (cadr equation))
                                           (evaluate-rec (cons '* (cddr equation))))])]
@@ -171,9 +168,9 @@
       [(eq? (car equation) 'sec) (/ 1 (cos (evaluate-rec (cadr equation))))]
       [(eq? (car equation) 'cot) (/ 1 (tan (evaluate-rec (cadr equation))))]
       [(eq? (car equation) '^) (expt (evaluate-rec (cadr equation)) (evaluate-rec (caddr equation)))]
-      [else (display "error: \"")
-            (display (car equation))
-            (display "\" is not supported\n")]
+      [else (error (string-append "error: evaluate-rec - \""
+                                  (symbol->string (car equation))
+                                  "\" is not supported"))]
       )))
 
 (define replace-x
@@ -207,8 +204,8 @@
       [(eq? equation 0) 0]
       [(number? equation) (list '* equation 'x)]
       [(eq? equation 'x) (list '* 1/2 (list '^ 'x 2))]
-      [(not (list? equation)) (display "error\n")]
-      [(null? equation) (display "error\n")]
+      [(not (list? equation)) (error "error: integral-rec - bad input")]
+      [(null? equation) (error "error: integral-rec - bad input")]
       [(eq? (car equation) 0) 0]
       [(number? (car equation)) (list '* (car equation) 'x)]
       [(eq? (car equation) 'x) (list '* 1/2 (list '^ 'x 2))]
@@ -223,26 +220,18 @@
                                  [(null? (cddr equation)) (integral-rec (cadr equation))]
                                  [(and (contains-x? (cadr equation))
                                        (contains-x? (cons '*
-                                                          (cddr equation)))) (display "error: integration by parts not supported\n")]
+                                                          (cddr equation)))) (error "error: integral-rec - integration by parts not supported")]
                                  [(not (contains-x? (cadr equation))) (list '*
                                                                             (evaluate-rec (cadr equation))
                                                                             (integral-rec (cons '* (cddr equation))))]
                                  [(not (contains-x? (cons '* (cddr equation)))) (list '*
                                                                                       (evaluate-rec (cons '* (cddr equation)))
                                                                                       (integral-rec (cadr equation)))]
-                                 [else (display "error?\n")])]
+                                 [else (error "error: integral-rec - bad input")])]
       [(eq? (car equation) '^) (cond
-                                 [(contains-x? (caddr equation)) (display "error: exponents containing x are not supported\n")]
+                                 [(contains-x? (caddr equation)) (error "error: integral-rec - exponents containing x are not supported")]
                                  [(contains-x? (cadr equation)) (cond
-                                                                  [(contains-trig? (cadr equation)) (display "error: only x^n or (a*x)^n is supported\n")]
-                                                                  #|[(eq? ((cadr equation) 'x)) (list '*
-                                                                                                    (/ 1
-                                                                                                       (+ 1
-                                                                                                          (evaluate-rec (caddr equation))))
-                                                                                                    (list '^
-                                                                                                          'x
-                                                                                                          (+ 1
-                                                                                                             (evaluate-rec (caddr equation)))))]|#
+                                                                  [(contains-trig? (cadr equation)) (error "error: integral-rec - only x^n or (a*x)^n is supported")]
                                                                   [else (list '*
                                                                               (/ (evaluate equation 1)
                                                                                  (+ 1
@@ -252,9 +241,9 @@
                                                                                     (+ 1
                                                                                        (evaluate-rec (caddr equation)))))])]
                                  [else (integral-rec (evaluate-rec equation))])]
-      [else (display "error: \"")
-            (display (car equation))
-            (display "\" is not supported\n")]
+      [else (error (string-append "error: integral-rec - \""
+                                  (symbol->string (car equation))
+                                  "\" is not supported"))]
       )))
 
 (define contains-trig?
@@ -280,8 +269,8 @@
     (cond
       [(number? equation) (number->string equation)]
       [(eq? equation 'x) "x"]
-      [(not (list? equation)) (display "error\n")]
-      [(null? equation) (display "error\n")]
+      [(not (list? equation)) (error "error: equation->string - bad input")]
+      [(null? equation) (error "error: equation->string - bad input")]
       [(number? (car equation)) (number->string (car equation))]
       [(eq? (car equation) 'x) "x"]
       [(eq? (car equation) '+) (cond
@@ -328,7 +317,7 @@
       [(eq? (car equation) 'csc) (string-append "csc(" (equation->string (cadr equation)) ")")]
       [(eq? (car equation) 'sec) (string-append "sec(" (equation->string (cadr equation)) ")")]
       [(eq? (car equation) 'cot) (string-append "cot(" (equation->string (cadr equation)) ")")]
-      [else (display "error\n")]
+      [else (error "error: equation->string - bad input")]
       )))
 
 (define reduce
