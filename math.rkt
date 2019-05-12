@@ -15,8 +15,7 @@
       (cond
         [(number? equation) 0]
         [(eq? equation 'x) 1]
-        [(eq? equation '(^ e x)) '(^ e x)]
-        [(not (list? equation)) (display "error: bad input\n")]
+        [(not (list? equation)) (error "error: deriv - unknown variable")]
         [(null? equation) 0]
         [(eq? op '+) (cond
                        [(null? third-to-end) (deriv-rec second)]
@@ -28,9 +27,9 @@
                                (list '+ (list '* (deriv-rec second) (cons '* third-to-end))
                                      (list '* second (deriv-rec (cons '* third-to-end)))))])]
         [(eq? op '/) (cond
-                       [(or (> (length equation) 3) (< (length equation) 2)) (display "error: \"")
-                                                                             (display op)
-                                                                             (display "\" should have exactly 2 arguments\n")]
+                       [(or (> (length equation) 3) (< (length equation) 2)) (error (string-append "error: deriv - \""
+                                                                                                   (symbol->string op)
+                                                                                                   "\" should have exactly two args"))]
                        [(null? third-to-end) (deriv-rec second)]
                        [else (list '/ (list '+ (list '* (deriv-rec second) (car third-to-end))
                                             (list '* -1 second (deriv-rec (car third-to-end))))
@@ -80,17 +79,17 @@
                                                                                                (filter (lambda (i) (not (eq? i '+)))
                                                                                                        (append-lists-in-list nested-plus-lists))
                                                                                                (if (eq? number 0)
-                                                                                                   '()
-                                                                                                   (list number))))]
+                                                                                                 '()
+                                                                                                 (list number))))]
                                            [else (cons '+ (map simplify (append (cdr new-list) (if (eq? number 0)
-                                                                                                   '()
-                                                                                                   (list number)))))]))])]
+                                                                                                 '()
+                                                                                                 (list number)))))]))])]
       [(eq? (car equation) '*) (cond
                                  [(null? (cddr equation)) (simplify (cadr equation))]
                                  [else (let ([nested-times-lists (filter (lambda (i)
-                                                                          (if (list? i)
-                                                                            (eq? (car i) '*)
-                                                                            #f)) equation)]
+                                                                           (if (list? i)
+                                                                             (eq? (car i) '*)
+                                                                             #f)) equation)]
                                              [new-list (filter (lambda (i)
                                                                  (not (or (if (list? i)
                                                                             (eq? (car i) '*)
@@ -100,7 +99,7 @@
                                          (cond
                                            [(> (length nested-times-lists) 0) (simplify (append new-list
                                                                                                 (filter (lambda (i) (not (eq? i '*)))
-                                                                                                       (append-lists-in-list nested-times-lists))
+                                                                                                        (append-lists-in-list nested-times-lists))
                                                                                                 (if (eq? number 1) '() (list number))))]
                                            [else (cons '* (map simplify (append (if (eq? number 1) '() (list number)) (cdr new-list))))]))])]
       [else (cons (car equation) (map simplify (cdr equation)))])))
@@ -232,10 +231,40 @@
                                                                                       (evaluate-rec (cons '* (cddr equation)))
                                                                                       (integral-rec (cadr equation)))]
                                  [else (display "error?\n")])]
+      [(eq? (car equation) '^) (cond
+                                 [(contains-x? (caddr equation)) (display "error: exponents containing x are not supported\n")]
+                                 [(contains-x? (cadr equation)) (cond
+                                                                  [(contains-trig? (cadr equation)) (display "error: only x^n or (a*x)^n is supported\n")]
+                                                                  #|[(eq? ((cadr equation) 'x)) (list '*
+                                                                                                    (/ 1
+                                                                                                       (+ 1
+                                                                                                          (evaluate-rec (caddr equation))))
+                                                                                                    (list '^
+                                                                                                          'x
+                                                                                                          (+ 1
+                                                                                                             (evaluate-rec (caddr equation)))))]|#
+                                                                  [else (list '*
+                                                                              (/ (evaluate equation 1)
+                                                                                 (+ 1
+                                                                                    (evaluate-rec (caddr equation))))
+                                                                              (list '^
+                                                                                    'x
+                                                                                    (+ 1
+                                                                                       (evaluate-rec (caddr equation)))))])]
+                                 [else (integral-rec (evaluate-rec equation))])]
       [else (display "error: \"")
             (display (car equation))
             (display "\" is not supported\n")]
       )))
+
+(define contains-trig?
+  (lambda (equation)
+    (or (contains? equation 'sin)
+        (contains? equation 'cos)
+        (contains? equation 'tan)
+        (contains? equation 'csc)
+        (contains? equation 'sec)
+        (contains? equation 'cot))))
 
 (define def-integral
   (lambda (equation start end)
