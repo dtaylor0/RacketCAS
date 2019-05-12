@@ -100,6 +100,55 @@ Takes a function f(x) and a value of x, returns the value of f(x) at x = input v
 75
 ```
 
+#### evaluate-rec
+
+Takes an equation with no x, returns the value
+
+```
+> (evaluate '(* 3 (^ 5 2)) 5)
+75
+```
+
+#### replace-x
+
+Takes a function f(x) and a value of x, replaces all occurrences of x with the value
+
+```
+> (replace-x '(- (sin x) (^ x 5) (* 2 x)) 999)
+'(- (sin 999) (^ 999 5) (* 2 999))
+```
+
+#### contains-x?
+
+Takes a function f(x), returns true if there is an x in the function and false otherwise
+
+```
+> (contains-x? '(+ (* 2 (^ x 4)) (/ (* 4 x) (sin x))))
+#t
+```
+
+#### contains?
+
+Takes a function f(x) and a number or operator, returns true if the number/operator is in the function and false otherwise
+
+```
+> (contains? '(+ (* 2 (^ x 4)) (/ (* 4 x) (sin x))) 'sin)
+#t
+```
+
+#### print-equation
+
+Takes a function f(x), prints it using equation-\>string
+
+#### equation->string
+
+Takes a function f(x), turns it into a string in a readable form
+
+```
+> (equation->string '(+ (* 2 (^ x 4)) (/ (* 4 x) (sin x))))
+"(2)*((x)^(4)) + ((4)*(x))/(sin(x))"
+```
+
 #### integral
 
 Takes a function f(x), returns the integral of f(x) + C
