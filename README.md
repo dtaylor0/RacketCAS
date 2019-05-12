@@ -1,6 +1,6 @@
 # Symbolic Differentiation
 
-Computer algebra system in Racket that can be run in the REPL.  When using this CAS, equations should be entered in list form.
+Computer algebra system in Racket that can be run in the REPL or used in Racket programs.  When using this CAS, equations should be entered in list form.
 
 For example:
 
@@ -11,6 +11,26 @@ is the list form of:
 ```
 x^9 + cos(2x) + 5
 ```
+
+### Important Info
+
+#### how to use each operation when writing an equation
+
+'(+ a b c ...) takes two or more arguments, translates to a + b + c + ...
+
+'(- a b c ...) takes two or more arguments, translates to a - b - c - ...
+
+'(\* a b c ...) takes two or more arguments, translates to a * b * c * ...
+
+'(/ a b) takes two arguments, translates to a / b
+
+'(^ a b) takes two arguments, translates to a ^ b
+
+'(sin a) takes one argument, translates to sin(a)
+
+The other 5 trig functions are supported as well.
+
+Integration only supports + and * (except for * requiring integration by parts).
 
 ### Currently supported features:
 
