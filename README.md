@@ -80,7 +80,7 @@ Takes a function f(x), returns the derivative unsimplified
 
 #### simplify
 
-Takes a function f(x), greatly simplifies it by removing nested + and * calls as well as combining all numbers in + and * calls
+Takes a function f(x), greatly simplifies it by removing nested + and * calls as well as combining all numbers in +, \*, and ^ calls
 
 ```
 > (deriv-rec '(+ (* 2 (^ x 4)) (/ (* 3 (cos x)) (* 5 x))))
