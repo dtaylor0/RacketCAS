@@ -1,4 +1,4 @@
-# Symbolic Differentiation
+# RacketCAS
 
 Computer algebra system in Racket that can be run in the REPL or used in Racket programs.  When using this CAS, equations should be entered in list form.
 
@@ -13,6 +13,22 @@ x^9 + cos(2x) + 5
 ```
 
 ### Important Info:
+
+#### how to start using this program
+
+Just go to the directory with math.rkt, and then:
+
+```
+~/path/to/file $ racket
+Welcome to Racket v7.2.
+> (load "math.rkt")
+```
+
+From here, you can use any of the functions below.  It is also a good idea to start by storing equations for repeated use:
+
+```
+> (define equation-1 '(+ (* 3 (cos x)) (* 5 (^ x 6)) 9))
+```
 
 #### how to use each operation when writing an equation
 
